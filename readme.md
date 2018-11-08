@@ -37,3 +37,35 @@ To run a simulation with \sqrt{s} = 500 GeV
 ```
 main.exe 500
 ```
+
+## Creating plots
+
+To generate kinematic distributions for the final state muons, the R plotting package found [here](https://cran.r-project.org/web/packages/plotrix/index.html) can be used, which provides functionality to produce weighted histogram.
+
+### Installation
+
+In the R console, type
+```
+install.packages("plotrix")
+```
+
+### Use
+
+Start an R session, and type
+```
+library(plotrix)
+```
+to load the plotting package, then set the location of the input file with
+```
+input <- "path/to/kinematics.csv"
+```
+and run the plotting code with
+```
+plotKinematics(input).
+```
+
+
+
+
+
+
