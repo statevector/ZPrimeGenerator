@@ -5,6 +5,7 @@
 #include <math.h>       /* exp */
 #include <algorithm>    // std::min
 #include <complex>
+#include<fstream>
 
 #include "mt64.h"
 
@@ -29,7 +30,7 @@ class ZPrimeModel {
 		
 		// using Hewett, Rizzo angle convention...
 		double thetaE6 = 0;
-		if (_model=="SQ")        thetaE6 = asin(3.0/8.0*sqrt(6.0));  // SQ model // this is wrong
+		if (_model=="SQ")        thetaE6 = asin(3.0/8.0*sqrt(6.0));  // SQ model // double check this
 		else if (_model=="I")    thetaE6 = -1.0*asin(sqrt(5./8.));   // I model
 		else if (_model=="N")    thetaE6 = asin(-1.0/4.0);	         // N model
 		else if (_model=="Psi")  thetaE6 = 0.0;	                     // Psi model
@@ -369,6 +370,11 @@ int main(int argc, char* argv[]) {
 	int seed = 0x123;
 	init_genrand64(seed);
 	
+	// output file to write events
+	//string output = argv[1];
+	ofstream outfile;
+	outfile.open("output3.csv", ios::out);
+
 	// initialize beam parameteres
 	double sqrts = atof(argv[1]); // collider center mass (CM) energy in GeV
 	double s = pow(sqrts,2);
@@ -395,17 +401,14 @@ int main(int argc, char* argv[]) {
 	double f2_avg = 0;
 	double mcError = 0;
 	
-	
-	
-	
-	
 	//cout << "mu1_E, mu1_Px, mu1_Py, mu1_Pz, mu2_E, mu2_Px, mu2_Py, mu2_Pz, weight" << endl;
-	cout << "costheta, weight" << endl;
+	//cout << "costheta, weight" << endl;
+	outfile << "costheta, weight" << endl;
 	
 	// do monte-carlo integration
 	for(int i=1; i<nEvents; i++) {
 		
-		//if(i%1000==0) cout << "iteration " << i << endl;
+		if(i%10000==0) cout << "iteration " << i << endl;
 		
 		// random number generation
 		double r1 = genrand64_real1();
@@ -454,7 +457,8 @@ int main(int argc, char* argv[]) {
 		//cout << mu1_E  << ", " << mu1_Px << ", " << mu1_Py << ", " << mu1_Pz << ", " << 
 		//	mu2_E  << ", " << mu2_Px << ", " << mu2_Py << ", " << mu2_Pz << ", " << wt << endl;
 		
-		cout << cost << " " << wt << endl;
+		//cout << cost << ", " << wt << endl;
+		outfile << cost << ", " << wt/nEvents << endl;
 		
 	}
 	
@@ -464,14 +468,16 @@ int main(int argc, char* argv[]) {
 	f_avg = f_avg/nEvents;
 	cout << "f_avg:     " << f_avg << endl;
 	
-	f2_avg=f2_avg/nEvents;
+	f2_avg = f2_avg/nEvents;
 	cout << "f2_avg:    " << f2_avg << endl;
 	
 	double f = bounds*f_avg;
 	
-	mcError = bounds*sqrt( (f2_avg - pow(f_avg,2) ) / nEvents );
+	mcError = bounds*sqrt( (f2_avg - pow(f_avg,2)) / nEvents );
 	cout << "cross section: " << f << " +/- " << mcError << " nb" << endl;
   
+    outfile.close();
+
 	return 0;
 	
 }
