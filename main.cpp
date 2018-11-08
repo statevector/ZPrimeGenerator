@@ -18,6 +18,41 @@ using namespace std;
 
 double pi = M_PI;
 
+class fourVector{
+
+	public:
+
+		fourVector(const double &_Px, const double &_Py, const double &_Pz, const double &_E) {
+			Px = _Px;
+			Py = _Py;
+			Pz = _Pz;
+			E = _E;			
+		}
+	
+		// compute the transverse momentum
+		double Pt() {
+			return sqrt(Px*Px+Py*Py);
+		}
+		
+		// compute cosine of the polar angular
+		double cosTheta() {
+			return Pz/sqrt(Px*Px+Py*Py+Pz*Pz);
+		}
+
+		// compute the rapidity
+		double rapidity() {
+			return 0.5*log((E+Pz)/(E-Pz));
+		}
+
+	private:
+		
+		double Px;
+		double Py;
+		double Pz;
+		double E;
+		
+	};
+
 class ZPrimeModel {
 	
 	public:
@@ -326,7 +361,6 @@ double sigma(const double &x, const double &s, const ZPrimeModel &model) {
 		cout << "failure" << endl;
 	}
 	
-	
 	// differential cross section prefactor: dsigma/dcos = 1/(32*pi*s)*|M|^2
 	double sigma0 = 1.0/(32*pi*s);
 	
@@ -380,15 +414,15 @@ int main(int argc, char* argv[]) {
 	double s = pow(sqrts,2);
 	double E = sqrts/2; // energy of beams 1&2 in the CM frame
 	
-	// set the initial state four vectors in the CM frame
-	double e_E=0, e_Px=0, e_Py=0, e_Pz=0;
-	double p_E=0, p_Px=0, p_Py=0, p_Pz=0;
+	// set the initial state four vectors
+	//double e_E=0, e_Px=0, e_Py=0, e_Pz=0;
+	//double p_E=0, p_Px=0, p_Py=0, p_Pz=0;
 	
-	double mu1_E=0, mu1_Px=0, mu1_Py=0, mu1_Pz=0;
-	double mu2_E=0, mu2_Px=0, mu2_Py=0, mu2_Pz=0;
+	//double mu1_E=0, mu1_Px=0, mu1_Py=0, mu1_Pz=0;
+	//double mu2_E=0, mu2_Px=0, mu2_Py=0, mu2_Pz=0;
 	
 	// initialize Z'chi model with mZ' = 3 TeV and full interference: gamma/Z/Z'
-	ZPrimeModel model("Chi",3000,0);
+	ZPrimeModel model("Eta",3000,0);
 	
 	// number of events to generate
 	int nEvents = 1e5;
@@ -401,9 +435,8 @@ int main(int argc, char* argv[]) {
 	double f2_avg = 0;
 	double mcError = 0;
 	
-	//cout << "mu1_E, mu1_Px, mu1_Py, mu1_Pz, mu2_E, mu2_Px, mu2_Py, mu2_Pz, weight" << endl;
-	//cout << "costheta, weight" << endl;
-	outfile << "costheta, weight" << endl;
+	//outfile << "mu1_E, mu1_Px, mu1_Py, mu1_Pz, mu2_E, mu2_Px, mu2_Py, mu2_Pz, weight" << endl;
+	outfile << "costheta, pt, rapidity, weight" << endl;
 	
 	// do monte-carlo integration
 	for(int i=1; i<nEvents; i++) {
@@ -421,7 +454,7 @@ int main(int argc, char* argv[]) {
 		
 		// generate \phi in interval of [0,2pi)
 		double phi = 2*pi*r2;
-			
+		
 		// compute the cross section
 		double sig = sigma(cost, s, model);
 		
@@ -443,22 +476,38 @@ int main(int argc, char* argv[]) {
 		double mu1_Py = E*sint*cos(phi);
 		double mu1_Pz = E*cost;
 		double mu1_E  = E;
+		fourVector mu1(mu1_Px, mu1_Py, mu1_Pz, mu1_E);
 		
 		double mu2_Px = -mu1_Px;
 		double mu2_Py = -mu1_Py;
 		double mu2_Pz = -mu1_Pz;
 		double mu2_E  = E;
+		fourVector mu2(mu2_Px, mu2_Py, mu2_Pz, mu2_E);
+		
+		// derived kinematic quantities
+		
+		double mu1_pt = mu1.Pt();
+		double mu2_pt = mu2.Pt();
+		//cout << mu1_pt << " " << mu2_pt << endl;
+		
+		double mu1_cos = mu1.cosTheta();
+		double mu2_cos = mu2.cosTheta();
+		//cout << mu1_cos << " " << mu2_cos << endl;
+		
+		double mu1_y = mu1.rapidity();
+		double mu2_y = mu2.rapidity();
+		//cout << mu1_y << " " << mu2_y << endl;
+		
+		// write event kinematics to file 
+		outfile << mu1_cos << ", " << mu1_pt << ", " << mu1_y << ", " << wt/nEvents << endl;
+
+		// write event kinematics to file
+		//outfile << mu1_E  << ", " << mu1_Px << ", " << mu1_Py << ", " << mu1_Pz << ", " << 
+		//	mu2_E  << ", " << mu2_Px << ", " << mu2_Py << ", " << mu2_Pz << ", " << wt << endl;
 		
 		// compute the running mc error
 		mcError = bounds*sqrt( (f2_avg/i - pow(f_avg/i,2) ) / i);
 		//cout << i << " " << mcError << endl;
-
-		// write event kinematics to file
-		//cout << mu1_E  << ", " << mu1_Px << ", " << mu1_Py << ", " << mu1_Pz << ", " << 
-		//	mu2_E  << ", " << mu2_Px << ", " << mu2_Py << ", " << mu2_Pz << ", " << wt << endl;
-		
-		//cout << cost << ", " << wt << endl;
-		outfile << cost << ", " << wt/nEvents << endl;
 		
 	}
 	
