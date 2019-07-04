@@ -20,7 +20,9 @@ Detailed SM/BSM comparisons can be made with this code as running with a Z' is n
 
 ## How to Compile
 
+```
 g++ -o main.exe main.cpp  mt19937-64.c
+```
 
 ## How to Run
 
